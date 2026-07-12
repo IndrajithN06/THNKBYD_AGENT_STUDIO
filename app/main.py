@@ -6,6 +6,7 @@ from rich.console import Console
 
 from app.agents.director import DirectorAgent
 from app.agents.script_writer import ScriptWriterAgent
+from app.agents.storyboard_writer import StoryboardAgent
 from app.config.logging_config import setup_logging
 from app.config.settings import Settings, get_settings
 from app.tools.file_writer import FileWriter
@@ -23,11 +24,13 @@ def build_director(settings: Settings, console: Console) -> DirectorAgent:
     )
     llm = LLMClient(settings)
     script_writer = ScriptWriterAgent(llm=llm, resource_loader=resource_loader)
+    storyboard_writer = StoryboardAgent(llm=llm, resource_loader=resource_loader)
     file_writer = FileWriter(output_dir=settings.output_dir)
 
     return DirectorAgent(
         settings=settings,
         script_writer=script_writer,
+        storyboard_writer=storyboard_writer,
         file_writer=file_writer,
         resource_loader=resource_loader,
         console=console,
