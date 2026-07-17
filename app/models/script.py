@@ -1,7 +1,5 @@
 """Pydantic models for script generation."""
 
-from pathlib import Path
-
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -22,6 +20,10 @@ class ScriptRequest(BaseModel):
 class ScriptResult(BaseModel):
     """Output of a completed script generation run."""
 
-    topic: str
-    content: str
-    filepath: Path
+    topic: str = Field(min_length=3)
+
+    script_markdown: str = Field(min_length=1)
+
+    word_count: int = Field(ge=1)
+
+    generation_time_ms: float = Field(ge=0)

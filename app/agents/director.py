@@ -1,4 +1,4 @@
-"""Director agent — orchestrates the script generation workflow."""
+"""Director agent — orchestrates the content generation workflow."""
 
 import logging
 
@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 
+from app.agents.image_prompt_writer import ImagePromptGenerator
 from app.agents.script_writer import ScriptGenerator
 from app.agents.storyboard_writer import StoryboardGenerator
 from app.config.settings import Settings
@@ -29,6 +30,7 @@ class DirectorAgent:
         settings: Settings,
         script_writer: ScriptGenerator,
         storyboard_writer: StoryboardGenerator,
+        image_prompt_writer: ImagePromptGenerator,
         file_writer: FileWriter,
         resource_loader: ResourceLoader,
         console: Console,
@@ -36,15 +38,17 @@ class DirectorAgent:
         self._settings = settings
         self._script_writer = script_writer
         self._storyboard_writer = storyboard_writer
+        self._image_prompt_writer = image_prompt_writer
         self._file_writer = file_writer
         self._resources = resource_loader
         self._console = console
 
     def run(self, topic: str) -> StoryboardResult | None:
-        """Execute the script-to-storyboard generation pipeline."""
+        """Execute the content generation pipeline."""
+
         self._console.print(
             Panel.fit(
-                f"[bold]{self._settings.app_name}[/bold] — Storyboard Generation",
+                f"[bold]{self._settings.app_name}[/bold] — Content Generation",
                 border_style="green",
             )
         )
@@ -57,7 +61,7 @@ class DirectorAgent:
             return self._execute_pipeline(request)
         except LLMError as exc:
             self._console.print(f"\n[red]Generation failed:[/red] {exc}")
-            logger.error("Script generation failed: %s", exc)
+            logger.error("Generation failed: %s", exc)
             return None
         except FileNotFoundError as exc:
             self._console.print(f"\n[red]Missing resource:[/red] {exc}")
@@ -68,36 +72,68 @@ class DirectorAgent:
             logger.error("File operation failed: %s", exc)
             return None
         except ValidationError as exc:
-            self._console.print("\n[red]Storyboard validation failed.[/red]")
-            logger.error("Storyboard validation failed: %s", exc)
+            self._console.print("\n[red]Validation failed.[/red]")
+            logger.error("Validation failed: %s", exc)
             return None
 
     def _execute_pipeline(self, request: ScriptRequest) -> StoryboardResult:
         """Run generation and persistence steps for a validated request."""
+
         with self._console.status("[bold green]Loading THNKBYD style guide..."):
             style_guide = self._resources.load_knowledge(STYLE_GUIDE_FILE)
             logger.debug("Style guide loaded")
 
+        # Generate Script
         with self._console.status("[bold green]Generating script..."):
-            content = self._script_writer.generate(request, style_guide)
+            script = self._script_writer.generate(request, style_guide)
 
+        # Save Script
+        with self._console.status("[bold green]Saving script..."):
+            self._file_writer.save_script(
+                script.topic,
+                script.script_markdown,
+            )
+
+        # Generate Storyboard
         with self._console.status("[bold green]Generating cinematic storyboard..."):
-            storyboard = self._storyboard_writer.generate(content)
+            storyboard = self._storyboard_writer.generate(
+                script.script_markdown,
+            )
 
-        with self._console.status("[bold green]Saving markdown to outputs/storyboards/..."):
-            filepath = self._file_writer.save_storyboard(
-                request.topic, storyboard.storyboard_markdown
+        # Save Storyboard
+        with self._console.status("[bold green]Saving storyboard..."):
+            self._file_writer.save_storyboard(
+                request.topic,
+                storyboard.storyboard_markdown,
+            )
+
+        # Generate Image Prompts
+        with self._console.status("[bold green]Generating image prompts..."):
+            image_prompts = self._image_prompt_writer.generate(
+                storyboard,
+            )
+
+        # Save Image Prompts
+        with self._console.status("[bold green]Saving image prompts..."):
+            image_prompt_path = self._file_writer.save_image_prompts(
+                request.topic,
+                image_prompts.image_prompt_markdown,
             )
 
         self._console.print()
-        self._console.print(Markdown(storyboard.storyboard_markdown))
-        self._console.print(f"\n[green]Saved[/green] → [bold]{filepath}[/bold]")
+        self._console.print(Markdown(image_prompts.image_prompt_markdown))
+
+        self._console.print(
+            f"\n[green]Saved[/green] → [bold]{image_prompt_path}[/bold]"
+        )
 
         logger.info("Pipeline complete for topic: %s", request.topic)
+
         return storyboard
 
     def _validate_topic(self, topic: str) -> ScriptRequest | None:
         """Validate and parse the topic input."""
+
         try:
             return ScriptRequest(topic=topic)
         except ValidationError as exc:
