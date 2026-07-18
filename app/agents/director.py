@@ -8,6 +8,8 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from app.agents.image_prompt_writer import ImagePromptGenerator
+from app.agents.image_generator import ImageGenerator
+from app.models.image_generation import ImageGenerationResult
 from app.agents.script_writer import ScriptGenerator
 from app.agents.storyboard_writer import StoryboardGenerator
 from app.config.settings import Settings
@@ -31,6 +33,7 @@ class DirectorAgent:
         script_writer: ScriptGenerator,
         storyboard_writer: StoryboardGenerator,
         image_prompt_writer: ImagePromptGenerator,
+        image_generator: ImageGenerator,
         file_writer: FileWriter,
         resource_loader: ResourceLoader,
         console: Console,
@@ -39,11 +42,12 @@ class DirectorAgent:
         self._script_writer = script_writer
         self._storyboard_writer = storyboard_writer
         self._image_prompt_writer = image_prompt_writer
+        self._image_generator = image_generator
         self._file_writer = file_writer
         self._resources = resource_loader
         self._console = console
 
-    def run(self, topic: str) -> StoryboardResult | None:
+    def run(self, topic: str) -> ImageGenerationResult | None:
         """Execute the content generation pipeline."""
 
         self._console.print(
@@ -76,7 +80,7 @@ class DirectorAgent:
             logger.error("Validation failed: %s", exc)
             return None
 
-    def _execute_pipeline(self, request: ScriptRequest) -> StoryboardResult:
+    def _execute_pipeline(self, request: ScriptRequest) -> ImageGenerationResult:
         """Run generation and persistence steps for a validated request."""
 
         with self._console.status("[bold green]Loading THNKBYD style guide..."):
@@ -127,9 +131,20 @@ class DirectorAgent:
             f"\n[green]Saved[/green] → [bold]{image_prompt_path}[/bold]"
         )
 
+        # Generate Images
+        with self._console.status("[bold green]Generating images..."):
+            image_result = self._image_generator.generate(
+                image_prompts.image_prompt_markdown,
+            )
+
+        self._console.print(
+            f"\n[green]Generated {image_result.image_count} image(s)[/green] → "
+            f"[bold]{image_result.output_dir}[/bold]"
+        )
+
         logger.info("Pipeline complete for topic: %s", request.topic)
 
-        return storyboard
+        return image_result
 
     def _validate_topic(self, topic: str) -> ScriptRequest | None:
         """Validate and parse the topic input."""
