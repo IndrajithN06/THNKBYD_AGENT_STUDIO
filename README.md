@@ -1,88 +1,405 @@
-# thnkbyd-ai-agent
+# THNKBYD AI Agent Studio
 
-Production-ready AI agent scaffold for video content creation workflows.
+> An AI-powered multi-agent pipeline that transforms a simple topic into visual storytelling assets for cinematic YouTube videos.
 
-## Requirements
+---
 
-- Python 3.12
-- [Ollama](https://ollama.com/) (for local LLM inference)
+# Overview
 
-## Project Structure
+THNKBYD AI Agent Studio is a local-first AI content generation system built using an agentic architecture.
+
+The goal is to automate the creative workflow from a single topic into:
+
+- Script
+- Storyboard
+- Image Prompts
+- AI Generated Images
+- (Upcoming) Voiceover
+- (Upcoming) Final Video
+
+The project is designed with modular agents so that each stage can be improved independently.
+
+---
+
+# Current Pipeline
 
 ```
-thnkbyd-ai-agent/
-├── app/
-│   ├── agents/       # Agent definitions and orchestration
-│   ├── prompts/      # Prompt templates
-│   ├── tools/        # Tool integrations
-│   ├── workflows/    # Multi-step workflow pipelines
-│   ├── memory/       # Conversation and state memory
-│   ├── config/       # Application configuration
-│   ├── models/       # Pydantic data models
-│   └── main.py       # Application entry point
-├── outputs/          # Generated artifacts
-│   ├── scripts/
-│   ├── storyboards/
-│   ├── images/
-│   ├── audio/
-│   ├── videos/
-│   └── thumbnails/
-└── tests/            # Test suite
+User Topic
+      │
+      ▼
+Director Agent
+      │
+      ▼
+Script Writer Agent
+      │
+      ▼
+Storyboard Agent
+      │
+      ▼
+Image Prompt Agent
+      │
+      ▼
+Image Generator Agent
+      │
+      ▼
+ComfyUI
+      │
+      ▼
+Generated Images
 ```
 
-## Setup
+---
 
-1. **Clone the repository**
+# Project Structure
 
-   ```bash
-   git clone <repository-url>
-   cd thnkbyd-ai-agent
-   ```
+```
+app/
+│
+├── agents/
+│   ├── director.py
+│   ├── script_writer.py
+│   ├── storyboard_writer.py
+│   ├── image_prompt_writer.py
+│   └── image_generator.py
+│
+├── config/
+│
+├── models/
+│
+├── prompts/
+│
+├── tools/
+│   ├── llm_client.py
+│   ├── comfy_client.py
+│   ├── comfy_backend.py
+│   ├── image_service.py
+│   ├── file_writer.py
+│   └── resource_loader.py
+│
+├── workflows/
+│   └── dreamshaper_workflow.json
+│
+└── main.py
+```
 
-2. **Create a virtual environment (Python 3.12)**
+---
 
-   ```bash
-   py -3.12 -m venv .venv
-   ```
+# Agent Responsibilities
 
-3. **Activate the virtual environment**
+## Director Agent
 
-   Windows (PowerShell):
+Coordinates the complete pipeline.
 
-   ```bash
-   .\.venv\Scripts\Activate.ps1
-   ```
+Responsibilities
 
-   macOS / Linux:
+- Receives the user topic
+- Executes every agent
+- Saves outputs
+- Handles workflow orchestration
 
-   ```bash
-   source .venv/bin/activate
-   ```
+---
 
-4. **Install dependencies**
+## Script Writer Agent
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+Generates the long-form educational script.
 
-5. **Configure environment variables**
+Output
 
-   ```bash
-   copy .env.example .env
-   ```
+```
+outputs/scripts/
+```
 
-   Edit `.env` with your local settings.
+---
 
-## Usage
+## Storyboard Agent
 
-```bash
+Breaks the script into cinematic scenes.
+
+Output
+
+```
+outputs/storyboards/
+```
+
+---
+
+## Image Prompt Agent
+
+Converts storyboard scenes into high-quality AI image prompts.
+
+Each scene contains:
+
+- Image Prompt
+- Animation Notes
+- Assets Needed
+
+Output
+
+```
+outputs/image_prompts/
+```
+
+---
+
+## Image Generator Agent
+
+Generates one image per storyboard scene.
+
+Uses:
+
+- ImageService
+- ComfyBackend
+- ComfyClient
+
+Output
+
+```
+outputs/images/
+```
+
+---
+
+# Technologies Used
+
+## LLM
+
+- Ollama
+- Gemma 3
+
+Used for
+
+- Script generation
+- Storyboards
+- Image prompts
+
+---
+
+## Image Generation
+
+- ComfyUI
+- DreamShaper 8
+
+Workflow
+
+```
+Topic
+↓
+
+Scene Prompt
+
+↓
+
+ComfyUI API
+
+↓
+
+PNG Image
+```
+
+---
+
+# Architecture
+
+The project follows dependency injection.
+
+```
+Director
+
+↓
+
+ImageGeneratorAgent
+
+↓
+
+ImageService
+
+↓
+
+ImageBackend Interface
+
+↓
+
+ComfyBackend
+
+↓
+
+ComfyClient
+
+↓
+
+ComfyUI REST API
+```
+
+This allows changing the image backend without changing the agent.
+
+Possible future backends:
+
+- Stable Diffusion API
+- OpenAI Images API
+- Replicate
+- Fal AI
+- Local Flux
+
+---
+
+# Outputs
+
+Current generated assets
+
+```
+outputs/
+
+├── scripts/
+├── storyboards/
+├── image_prompts/
+└── images/
+```
+
+---
+
+# Current Features
+
+✅ Director Agent
+
+✅ Script Generation
+
+✅ Storyboard Generation
+
+✅ Image Prompt Generation
+
+✅ ComfyUI Integration
+
+✅ Automatic Image Generation
+
+✅ Automatic Image Saving
+
+✅ Modular Backend Architecture
+
+---
+
+# Roadmap
+
+## Completed
+
+- Milestone 1
+    - Project setup
+    - Multi-agent architecture
+    - Ollama integration
+
+- Milestone 2
+    - Script generation
+    - Storyboard generation
+
+- Milestone 3
+    - Image prompt generation
+
+- Milestone 4
+    - ComfyUI integration
+    - Image generation
+    - Image backend abstraction
+    - Workflow loading
+    - Automatic image saving
+
+---
+
+## Next Milestones
+
+### Milestone 5
+
+Video Assembly
+
+- FFmpeg integration
+- Scene sequencing
+- Transitions
+
+---
+
+### Milestone 6
+
+Voice Generation
+
+- TTS
+- Narration synchronization
+
+---
+
+### Milestone 7
+
+Background Music
+
+- AI generated music
+- Ambient effects
+
+---
+
+### Milestone 8
+
+Final Video Rendering
+
+- Narration
+- Images
+- Music
+- Captions
+
+↓
+
+Final MP4
+
+---
+
+# Installation
+
+Clone the repository
+
+```
+git clone <repo-url>
+```
+
+Create virtual environment
+
+```
+python -m venv .venv
+```
+
+Install dependencies
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+# Prerequisites
+
+Install and run:
+
+- Ollama
+- ComfyUI
+- DreamShaper model
+
+---
+
+# Run
+
+```
 python -m app.main
 ```
 
-## Development
+Enter a topic
 
-Project modules are organized under `app/` following clean architecture principles. Add agents, tools, and workflows in their respective packages as features are implemented.
+```
+Why Your Brain Chooses Comfort Over Success
+```
 
-## License
+The pipeline will generate:
 
-Proprietary — THNKBYD
+- Script
+- Storyboard
+- Image Prompts
+- Scene Images
+
+---
+
+# Vision
+
+The long-term vision of THNKBYD is to become an autonomous AI creative studio capable of transforming a single idea into a complete, production-ready educational video with minimal human intervention.
