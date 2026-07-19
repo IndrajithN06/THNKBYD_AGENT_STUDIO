@@ -19,11 +19,6 @@ class Settings(BaseModel):
     ollama_host: str = Field(default="http://localhost:11434", alias="OLLAMA_HOST")
     ollama_model: str = Field(default="qwen2.5:3b", alias="OLLAMA_MODEL")
     output_dir: Path = Field(default=PROJECT_ROOT / "outputs", alias="OUTPUT_DIR")
-    huggingface_api_key: str = Field(default="", alias="HUGGINGFACE_API_KEY")
-    huggingface_image_model: str = Field(
-        default="stabilityai/stable-diffusion-xl-base-1.0",
-        alias="HUGGINGFACE_IMAGE_MODEL",
-    )
     model_config = {"populate_by_name": True}
 
     @property
@@ -35,6 +30,11 @@ class Settings(BaseModel):
     def knowledge_dir(self) -> Path:
         """Directory containing knowledge and style documents."""
         return PROJECT_ROOT / "app" / "knowledge"
+
+    @property
+    def workflows_dir(self) -> Path:
+        """Directory containing workflow files."""
+        return PROJECT_ROOT / "app" / "workflows"
 
 
 def get_settings() -> Settings:

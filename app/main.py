@@ -12,7 +12,8 @@ from app.agents.storyboard_writer import StoryboardAgent
 from app.config.logging_config import setup_logging
 from app.config.settings import Settings, get_settings
 from app.tools.file_writer import FileWriter
-from app.tools.image_service import HuggingFaceBackend, ImageService
+from app.tools.comfy_backend import ComfyBackend
+from app.tools.image_service import ImageService
 from app.tools.llm_client import LLMClient
 from app.tools.resource_loader import ResourceLoader
 
@@ -48,7 +49,7 @@ def build_director(settings: Settings, console: Console) -> DirectorAgent:
     )
 
     # Image generation
-    image_backend = HuggingFaceBackend(settings)
+    image_backend = ComfyBackend(settings)
     image_service = ImageService(backend=image_backend)
 
     image_generator = ImageGeneratorAgent(
